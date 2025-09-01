@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="student-detail-container">
+    <div class="student-header">
+        <h2>{{ student.fname }} {{ student.lname }}</h2>
+        <div class="student-actions">
+            <a href="{% url 'dashboard:student_list' %}" class="btn btn-secondary">← Back to List</a>
+            <a href="{% url 'dashboard:student_create' %}?edit={{ student.pk }}" class="btn btn-warning">✏️ Edit</a>
+        </div>
+    </div>
+
+    <div class="student-info">
+        <div class="info-section">
+            <h4>📞 Contact Information</h4>
+            <p><strong>Phone:</strong> {{ student.phone_no }}</p>
+            <p><strong>Guardian Phone:</strong> {{ student.guardian_phone }}</p>
+        </div>
+
+        <div class="info-section">
+            <h4>🏠 Address</h4>
+            <p>{{ student.full_address }}</p>
+        </div>
+
+        <div class="info-section">
+            <h4>🎓 School Information</h4>
+            <p><strong>Strand:</strong> {{ student.strand }}</p>
+            <p><strong>Section:</strong> {{ student.section }}</p>
+            <p><strong>School:</strong> {{ student.school }}</p>
+        </div>
+    </div>
+
+    {% if student.qr_code %}
+    <div class="qr-section">
+        <h4>📌 QR Code</h4>
+        <img src="{{ student.qr_code.url }}" alt="QR Code" class="qr-image">
+        <br>
+        <a href="{% url 'dashboard:qr_code_download' student.pk %}" download class="btn btn-primary mt-2">
+            ⬇️ Download QR Code
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .student-detail-container {
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        max-width: 800px;
+        margin: auto;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .student-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .student-header h2 {
+        margin: 0;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    .student-actions .btn {
+        margin-left: 8px;
+    }
+    .student-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    .info-section {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    .info-section h4 {
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #34495e;
+    }
+    .qr-section {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 15px;
+        border-top: 2px solid #eee;
+    }
+    .qr-image {
+        max-width: 200px;
+        border: 4px solid #3498db;
+        border-radius: 10px;
+        padding: 5px;
+        background: white;
+    }
+    .btn-primary {
+        background: #3498db;
+        border: none;
+    }
+    .btn-primary:hover {
+        background: #2c80b4;
+    }
+    .btn-warning {
+        background: #f39c12;
+        border: none;
+        color: white;
+    }
+    .btn-warning:hover {
+        background: #d68910;
+    }
+</style>
+{% endblock %}

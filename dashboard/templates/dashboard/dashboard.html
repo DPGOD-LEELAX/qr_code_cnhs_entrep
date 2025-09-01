@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="mb-4">Student List</h1>
+
+<!-- Strand Count Boxes -->
+<div class="row mb-4">
+    {% for strand in strand_counts %}
+    <div class="col-md-2 col-sm-4 col-6 mb-3">
+        <div class="p-3 text-center shadow-sm rounded" 
+             style="background: linear-gradient(135deg, #007bff, #00bfff); color: white;">
+            <h6 class="fw-bold text-uppercase">{{ strand.strand }}</h6>
+            <p class="fs-3 fw-bold mb-0">{{ strand.total }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Student Button -->
+<a class="btn btn-primary mb-3" href="{% url 'dashboard:student_create' %}">Add New Student</a>
+
+<!-- Student List -->
+{% comment %} <ul class="list-group">
+    {% for student in students %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <a href="{% url 'dashboard:student_detail' student.pk %}">
+            {{ student.fname }} {{ student.lname }} - {{ student.strand }}
+        </a>
+        {% if student.qr_code %}
+        <a class="btn btn-sm btn-outline-success" href="{% url 'dashboard:qr_code_download' student.pk %}" download>
+            Download QR
+        </a>
+        {% endif %}
+    </li>
+    {% empty %}
+    <li class="list-group-item">No students found.</li>
+    {% endfor %}
+</ul> {% endcomment %}
+{% endblock %}
