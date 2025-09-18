@@ -8,10 +8,14 @@ from django.core.files import File
 from django.conf import settings
 import os
 from django.db.models import Count
-from django.shortcuts import render
-from .models import Student
+from qrcode.image.styledpil import StyledPilImage
+from qrcode.image.styles.moduledrawers.pil import CircleModuleDrawer
+from PIL import Image, ImageDraw
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.contrib import messages
 
-from django.db.models import Count
+
 
 def dashboard(request):
     students = Student.objects.all()
@@ -23,21 +27,55 @@ def dashboard(request):
         'student_count': student_count
     })
 
+
+
+
+
+
 def generate_qr_code(data):
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
         box_size=10,
         border=4,
     )
     qr.add_data(data)
     qr.make(fit=True)
+
+    # Create QR with circular dots and subtle color variation
+    qr_img = qr.make_image(
+        image_factory=StyledPilImage,
+        module_drawer=CircleModuleDrawer(),
+        fill_color="#34495E",  # Dark gray-blue
+        back_color="#F8F9FA"   # Very light gray
+    ).convert("RGBA")
     
-    img = qr.make_image(fill_color="black", back_color="white")
+    qr_size = qr_img.size[0]
+
+    # Create circular frame with modern design - make it larger to accommodate QR
+    circle_diameter = int(qr_size * 1.4)  # Increased from 1.25 to 1.4
+    circle_img = Image.new("RGBA", (circle_diameter, circle_diameter), (255, 255, 255, 0))
+    draw = ImageDraw.Draw(circle_img)
+
+    # Double border effect - positioned further inward
+    border_padding = 15  # Space between QR and border
+    draw.ellipse((0, 0, circle_diameter, circle_diameter), 
+                fill=(255, 255, 255, 255), 
+                outline="#E74C3C",  # Red outer border
+                width=6)
     
+    draw.ellipse((8, 8, circle_diameter-8, circle_diameter-8), 
+                outline="#3498DB",  # Blue inner border
+                width=3)
+
+    # Paste QR in the center with proper padding
+    offset = ((circle_diameter - qr_size) // 2, (circle_diameter - qr_size) // 2)
+    circle_img.paste(qr_img, offset, qr_img)
+
     buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    
+    circle_img.save(buffer, format="PNG")
+    buffer.seek(0)
+
     return buffer
 
 
@@ -45,8 +83,8 @@ def generate_qr_code(data):
 
 
 
-from django.core.paginator import Paginator
-from django.db.models import Q
+
+
 
 def student_list(request):
     query = request.GET.get('q', '')
@@ -111,7 +149,7 @@ def qr_code_download(request, pk):
     return HttpResponse("QR Code not found", status=404)
 
 
-from django.contrib import messages
+
 
 def student_edit(request, pk):
     student = get_object_or_404(Student, pk=pk)
@@ -135,10 +173,16 @@ def student_edit(request, pk):
 def student_delete(request, pk):
     student = get_object_or_404(Student, pk=pk)
     if request.method == 'POST':  # confirm deletion
+        # ✅ Delete QR file from disk before deleting object
+        if student.qr_code and student.qr_code.path:
+            if os.path.isfile(student.qr_code.path):
+                os.remove(student.qr_code.path)
+
         student.delete()
         messages.success(request, "Student deleted successfully.")
         return redirect('dashboard:student_list')
     return render(request, 'dashboard/student_confirm_delete.html', {'student': student})
+
 
 
 
